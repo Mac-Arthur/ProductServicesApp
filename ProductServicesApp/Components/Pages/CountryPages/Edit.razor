@@ -1,0 +1,169 @@
+﻿@page "/countries/edit"
+@using Microsoft.EntityFrameworkCore
+@using ProductServicesApp.Models
+@inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Country</PageTitle>
+
+
+
+<h4>Update Country Details</h4>
+<hr />
+@if (Country is null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<div class="row">
+		<div class="col-md-4">
+			<EditForm method="post" Model="Country" OnValidSubmit="UpdateCountry" FormName="edit" Enhance>
+				<DataAnnotationsValidator />
+				<ValidationSummary />
+				<input type="hidden" name="Country.Id" value="@Country.Id" />
+				<div class="mb-2">
+					<label for="name" class="form-label">Name:</label>
+					<InputText id="name" @bind-Value="Country.Name" class="form-control" />
+					<ValidationMessage For="() => Country.Name" class="text-danger" />
+				</div>
+				<div class="mb-2">
+					<label for="shortcode" class="form-label">ShortCode:</label>
+					<InputText id="shortcode" @bind-Value="Country.ShortCode" class="form-control" />
+					<ValidationMessage For="() => Country.ShortCode" class="text-danger" />
+				</div>
+				<div class="mb-2">
+					<label for="datecreated" class="form-label">DateCreated:</label>
+					<InputDate id="datecreated" @bind-Value="Country.DateCreated" class="form-control" disabled />
+					<ValidationMessage For="() => Country.DateCreated" class="text-danger" />
+				</div>
+
+				<div class="mb-2">
+					<label for="dateupdated" class="form-label">DateUpdated:</label>
+					<InputDate id="dateupdated" @bind-Value="Country.DateUpdated" class="form-control" disabled />
+					<ValidationMessage For="() => Country.DateUpdated" class="text-danger" />
+				</div>
+				<div class="mb-2">
+					<label for="isactive" class="form-label">IsActive:</label>
+					<InputCheckbox id="isactive" @bind-Value="Country.IsActive" class="form-check-input" />
+					<ValidationMessage For="() => Country.IsActive" class="text-danger" />
+				</div>
+				<button type="submit" class="btn btn-success">Save</button>
+			</EditForm>
+		</div>
+	</div>
+}
+
+<div>
+	<a class="btn btn-sm btn-secondary mt-3" href="/countries">Back to List</a>
+</div>
+
+@code {
+	[SupplyParameterFromQuery]
+	private int Id { get; set; }
+
+	[SupplyParameterFromForm]
+	private Country? Country { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		using var context = DbFactory.CreateDbContext();
+		Country ??= await context.Country.FirstOrDefaultAsync(m => m.Id == Id);
+
+		if (Country is null)
+		{
+			NavigationManager.NavigateTo("notfound");
+		}
+	}
+
+	private async Task UpdateCountry()
+	{
+		using var context = DbFactory.CreateDbContext();
+
+		// Fetch the existing entity from the database
+		var existingCountry = await context.Country.AsNoTracking().FirstOrDefaultAsync(c => c.Id == Country!.Id);
+		if (existingCountry is null)
+		{
+			NavigationManager.NavigateTo("notfound");
+			return;
+		}
+
+		// Preserve the original DateCreated value
+		Country.DateCreated = existingCountry.DateCreated;
+
+		// Update the DateUpdated field to the current time
+		Country.DateUpdated = DateTime.Now;
+
+		// Attach and mark the entity as modified
+		context.Attach(Country!).State = EntityState.Modified;
+
+		try
+		{
+			await context.SaveChangesAsync();
+		}
+		catch (DbUpdateConcurrencyException)
+		{
+			if (!CountryExists(Country!.Id))
+			{
+				NavigationManager.NavigateTo("notfound");
+			}
+			else
+			{
+				throw;
+			}
+		}
+
+		NavigationManager.NavigateTo("/countries");
+	}
+
+	private bool CountryExists(int id)
+	{
+		using var context = DbFactory.CreateDbContext();
+		return context.Country.Any(e => e.Id == id);
+	}
+
+
+	// private async Task UpdateCountry()
+	// {
+	//     using var context = DbFactory.CreateDbContext();
+
+	//     Country.DateUpdated = DateTime.Now;
+	//     context.Attach(Country!).State = EntityState.Modified;
+
+	//     try
+	//     {
+	//         await context.SaveChangesAsync();
+	//     }
+	//     catch (DbUpdateConcurrencyException)
+	//     {
+	//         if (!CountryExists(Country!.Id))
+	//         {
+	//             NavigationManager.NavigateTo("notfound");
+	//         }
+	//         else
+	//         {
+	//             throw;
+	//         }
+	//     }
+
+	//     NavigationManager.NavigateTo("/countries");
+		// }
+
+
+
+
+
+	// private bool CountryExists(int id)
+	// {
+	//     using var context = DbFactory.CreateDbContext();
+	//     return context.Country.Any(e => e.Id == id);
+		// }
+
+
+}
+
+                @* <div class="mb-3">
+                    <label for="datecreated" class="form-label">DateCreated:</label>
+                    <InputDate id="datecreated" @bind-Value="Country.DateCreated" class="form-control" />
+                    <ValidationMessage For="() => Country.DateCreated" class="text-danger" />
+                </div> *@

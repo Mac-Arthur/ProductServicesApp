@@ -1,0 +1,76 @@
+﻿@page "/companies"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using ProductServicesApp.Models
+@using ProductServicesApp.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Company</PageTitle>
+
+<h4>Manage Countries</h4>
+
+<p>
+    <a class="btn btn-sm btn-secondary" href="companies/create">Add Company</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Company Mail</th>
+            <th>Contact Name</th>
+            <th>Contact Mail</th>
+            <th>Country</th>
+            <th>Action</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var company in context.Company)
+        {
+            <tr>
+                <td>@company.Name</td>
+                <td>@company.CompanyMail</td>
+                <td>@company.ContactPersonName</td>
+                <td>@company.ContactPersonMail</td>
+                <td>@(company.Country?.Name ?? "No Country")</td>
+                <td>
+                    <a class="btn btn-sm btn-secondary" href="@($"companies/edit?id={company.Id}")">Edit</a> |
+                    <a  href="@($"companies/details?id={company.Id}")">Details</a> |
+                    <a class="btn btn-sm btn-outline-danger" href="@($"companies/delete?id={company.Id}")">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+        context.Company.Include(c => c.Country).ToList();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
+
+@* 
+<QuickGrid Class="table" Items="context.Company">
+    <PropertyColumn Property="company => company.Name" />
+    <PropertyColumn Property="company => company.CompanyMail" />
+    <PropertyColumn Property="company => company.ContactPersonName" />
+    <PropertyColumn Property="company => company.ContactPersonMail" />
+    <PropertyColumn Property="company => company.DateCreated" />
+    <PropertyColumn Property="company => company.DateUpdated" />
+    <PropertyColumn Property="company => company.IsActive" />
+    <PropertyColumn Property="company => company.CountryId" />
+
+    <TemplateColumn Context="company">
+        <a href="@($"companies/edit?id={company.Id}")">Edit</a> |
+        <a href="@($"companies/details?id={company.Id}")">Details</a> |
+        <a href="@($"companies/delete?id={company.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid> *@
