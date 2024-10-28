@@ -1,46 +1,45 @@
 ﻿@page "/companies/create"
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject IJSRuntime js
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+@attribute [Authorize]
 
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
 
-<h2>Company</h2>
+<h4>Enter Company Details</h4>
 <hr />
 <div class="row">
 	<div class="col-md-4">
 		<EditForm method="post" Model="Company" OnValidSubmit="AddCompany" FormName="create" Enhance>
 			<DataAnnotationsValidator />
 			<ValidationSummary class="text-danger" />
-			<div class="mb-3">
+			<div class="mb-2">
 				<label for="name" class="form-label">Name:</label>
 				<InputText id="name" @bind-Value="Company.Name" class="form-control" />
 				<ValidationMessage For="() => Company.Name" class="text-danger" />
 			</div>
-			<div class="mb-3">
-				<label for="companymail" class="form-label">CompanyMail:</label>
+			<div class="mb-2">
+				<label for="companymail" class="form-label">Company Mail:</label>
 				<InputText id="companymail" @bind-Value="Company.CompanyMail" class="form-control" />
 				<ValidationMessage For="() => Company.CompanyMail" class="text-danger" />
 			</div>
-			<div class="mb-3">
-				<label for="contactpersonname" class="form-label">ContactPersonName:</label>
+			<div class="mb-2">
+				<label for="contactpersonname" class="form-label">Contact Person Name:</label>
 				<InputText id="contactpersonname" @bind-Value="Company.ContactPersonName" class="form-control" />
 				<ValidationMessage For="() => Company.ContactPersonName" class="text-danger" />
 			</div>
-			<div class="mb-3">
-				<label for="contactpersonmail" class="form-label">ContactPersonMail:</label>
+			<div class="mb-2">
+				<label for="contactpersonmail" class="form-label">Contact Person Mail:</label>
 				<InputText id="contactpersonmail" @bind-Value="Company.ContactPersonMail" class="form-control" />
 				<ValidationMessage For="() => Company.ContactPersonMail" class="text-danger" />
 			</div>
-			<div class="mb-3">
-				<label for="isactive" class="form-label">IsActive:</label>
-				<InputCheckbox id="isactive" @bind-Value="Company.IsActive" class="form-check-input" />
-				<ValidationMessage For="() => Company.IsActive" class="text-danger" />
-			</div>
-			<div class="mb-3">
+			<div class="mb-2">
 				<label for="countryid" class="form-label">Country:</label>
 				<InputSelect id="countryid" @bind-Value="Company.CountryId" class="form-control">
 					<option value="">Select a country</option>
@@ -50,44 +49,46 @@
 					}
 				</InputSelect>
 				<ValidationMessage For="() => Company.CountryId" class="text-danger" />
-			</div>            <button type="submit" class="btn btn-primary">Create</button>
+			</div>  
+			<div class="mt-4">
+			<button type="submit" class="btn btn-sm btn-primary">Create</button>
+				<a class="btn btn-sm btn-dark ms-2" href="/companies">  Back  </a>
+			</div>
 		</EditForm>
 	</div>
 </div>
 
-<div>
-	<a href="/companies">Back to List</a>
-</div>
+
 
 @code {
 	[SupplyParameterFromForm]
 	private Company Company { get; set; } = new();
-	private List<Country> Countries = new(); // List to hold countries
+	private List<Country> Countries = new(); 
 
 	protected override async Task OnInitializedAsync()
 	{
 		using var context = DbFactory.CreateDbContext();
-		Countries = await context.Country.ToListAsync();  // Load countries from database
+		Countries = await context.Country.ToListAsync();  
 	}
-	// To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 	private async Task AddCompany()
 	{
 		using var context = DbFactory.CreateDbContext();
-		context.Company.Add(Company);
-		Company.DateCreated = DateTime.Now;
-		Company.DateUpdated = DateTime.Now;
-		await context.SaveChangesAsync();
-		NavigationManager.NavigateTo("/companies");
+		var existingcompany = await context.Company.FirstOrDefaultAsync(c => c.Name == Company.Name.ToLower() && c.CountryId == Company.CountryId);
+		if(existingcompany is null)
+		{
+			Company.DateCreated = DateTime.Now;
+			Company.DateUpdated = DateTime.Now;
+			Company.IsActive = true;
+			context.Company.Add(Company);
+			await context.SaveChangesAsync();
+			NavigationManager.NavigateTo("/companies");
+		}
+		else
+		{
+			await js.InvokeVoidAsync("alert", "Company already exists.");
+		}
+
 	}
 }
 
-   @*          <div class="mb-3">
-                <label for="datecreated" class="form-label">DateCreated:</label>
-                <InputDate id="datecreated" @bind-Value="Company.DateCreated" class="form-control" />
-                <ValidationMessage For="() => Company.DateCreated" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="dateupdated" class="form-label">DateUpdated:</label>
-                <InputDate id="dateupdated" @bind-Value="Company.DateUpdated" class="form-control" />
-                <ValidationMessage For="() => Company.DateUpdated" class="text-danger" />
-            </div>  *@       
+   

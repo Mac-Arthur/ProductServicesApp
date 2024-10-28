@@ -220,7 +220,36 @@ namespace ProductServicesApp.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ProductServicesApp.Models.Company", b =>
+            modelBuilder.Entity("ProductServicesApp.Models.CompanyProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsExporter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsImporter")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CompanyProduct");
+                });
+
+            modelBuilder.Entity("ProductServicesApp.Models.Entities.Company", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -229,6 +258,7 @@ namespace ProductServicesApp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CompanyMail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContactPersonMail")
@@ -250,6 +280,7 @@ namespace ProductServicesApp.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -259,7 +290,7 @@ namespace ProductServicesApp.Migrations
                     b.ToTable("Company");
                 });
 
-            modelBuilder.Entity("ProductServicesApp.Models.Country", b =>
+            modelBuilder.Entity("ProductServicesApp.Models.Entities.Country", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -287,7 +318,7 @@ namespace ProductServicesApp.Migrations
                     b.ToTable("Country");
                 });
 
-            modelBuilder.Entity("ProductServicesApp.Models.Product", b =>
+            modelBuilder.Entity("ProductServicesApp.Models.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -295,27 +326,16 @@ namespace ProductServicesApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsExporter")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsImporter")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
 
                     b.ToTable("Product");
                 });
@@ -371,9 +391,28 @@ namespace ProductServicesApp.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ProductServicesApp.Models.Company", b =>
+            modelBuilder.Entity("ProductServicesApp.Models.CompanyProduct", b =>
                 {
-                    b.HasOne("ProductServicesApp.Models.Country", "Country")
+                    b.HasOne("ProductServicesApp.Models.Entities.Company", "Company")
+                        .WithMany("CompanyProducts")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("ProductServicesApp.Models.Entities.Product", "Product")
+                        .WithMany("CompanyProducts")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("ProductServicesApp.Models.Entities.Company", b =>
+                {
+                    b.HasOne("ProductServicesApp.Models.Entities.Country", "Country")
                         .WithMany()
                         .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -382,15 +421,14 @@ namespace ProductServicesApp.Migrations
                     b.Navigation("Country");
                 });
 
-            modelBuilder.Entity("ProductServicesApp.Models.Product", b =>
+            modelBuilder.Entity("ProductServicesApp.Models.Entities.Company", b =>
                 {
-                    b.HasOne("ProductServicesApp.Models.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("CompanyProducts");
+                });
 
-                    b.Navigation("Company");
+            modelBuilder.Entity("ProductServicesApp.Models.Entities.Product", b =>
+                {
+                    b.Navigation("CompanyProducts");
                 });
 #pragma warning restore 612, 618
         }

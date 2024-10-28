@@ -1,8 +1,10 @@
 ﻿@page "/countries/edit"
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 
 <PageTitle>Edit Country</PageTitle>
 
@@ -48,15 +50,17 @@ else
 					<InputCheckbox id="isactive" @bind-Value="Country.IsActive" class="form-check-input" />
 					<ValidationMessage For="() => Country.IsActive" class="text-danger" />
 				</div>
-				<button type="submit" class="btn btn-success">Save</button>
+				<div>
+					<button type="submit" class="btn btn-sm btn-success">Save</button>
+					<a class="btn btn-sm btn-dark ms-2" href="/countries">Back to List</a>
+				</div>
+				
 			</EditForm>
 		</div>
 	</div>
 }
 
-<div>
-	<a class="btn btn-sm btn-secondary mt-3" href="/countries">Back to List</a>
-</div>
+
 
 @code {
 	[SupplyParameterFromQuery]
@@ -87,14 +91,8 @@ else
 			NavigationManager.NavigateTo("notfound");
 			return;
 		}
-
-		// Preserve the original DateCreated value
 		Country.DateCreated = existingCountry.DateCreated;
-
-		// Update the DateUpdated field to the current time
 		Country.DateUpdated = DateTime.Now;
-
-		// Attach and mark the entity as modified
 		context.Attach(Country!).State = EntityState.Modified;
 
 		try

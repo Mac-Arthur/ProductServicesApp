@@ -1,11 +1,18 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProductServicesApp.Components;
 using ProductServicesApp.Components.Account;
 using ProductServicesApp.Data;
+using Syncfusion.Blazor;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -16,13 +23,35 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
+//builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+//	.AddCookie(options =>
+//	{
+//		options.LoginPath = "/Account/Login";
+//		options.AccessDeniedPath = "/Account/AccessDenied";
+//	});
+
+
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
-    .AddIdentityCookies();
+    .AddIdentityCookies(o =>
+    {
+        //o.ApplicationCookie.Services.ConfigureApplicationCookie(i =>
+        //{
+        //    i.LoginPath = "/";
+        //        i.AccessDeniedPath = "/Account/AccessDenied";
+        //});
+	});
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
+
+builder.Services.AddSyncfusionBlazor();
 
 // Add services to the container.
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>

@@ -1,8 +1,10 @@
 ﻿@page "/countries/details"
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 
 <PageTitle>Country Details</PageTitle>
 
@@ -10,7 +12,7 @@
 
 <div>
     <h4>Country Details</h4>
-    <hr />
+    <hr class="mb-5" />
     @if (country is null)
     {
         <p><em>Loading...</em></p>
@@ -30,7 +32,7 @@
         </dl>
         <div>
             <a class="btn btn-sm btn-secondary" href="@($"/countries/edit?id={country.Id}")">Edit</a> |
-            <a class="btn btn-sm btn-secondary"  href="@($"/countries")">Back to List</a>
+            <a class="btn btn-sm btn-dark"  href="@($"/countries")">Back to List</a>
         </div>
     }
 </div>

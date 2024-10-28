@@ -1,7 +1,148 @@
-﻿@page "/"
+﻿@page "/home"
+@using Microsoft.EntityFrameworkCore
+@using ProductServicesApp.Models
+@using ProductServicesApp.Data
+@using Microsoft.AspNetCore.Authorization
+@inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+@attribute [Authorize]
 
-<PageTitle>Home</PageTitle>
+<h5 class="ms-3">Dashboard</h5>
+<hr />
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+<div class="container my-4">
+	<div class="row">
+		<div class="col-md-4 mb-2">
+			<div class="container d-flex justify-content-center mt-1">
+			<a href="/countries" class="text-decoration-none">
+					<div class="card text-dark bg-white shadow mb-3 active rounded-2" style="width:200px;">
+						<div class="card-header bg-black text-white text-center h6">Countries</div>
+						<div class="card-body bg-light text-dark d-flex justify-content-between">
+							<div>
+								<h4 class="card-title">@countryCount</h4>
+								<p class="card-text">Countries</p>
+							</div>
+							<h1><i class="bi bi-globe-europe-africa"></i></h1>
+						</div>
+					</div>
+			</a>	
+			</div>
+		</div>
+		<div class="col-md-4 mb-2">
+			<div class="container d-flex justify-content-center mt-1">
+				<a href="/companies" class="text-decoration-none">
+					<div class="card text-dark bg-white shadow mb-3 active rounded-2" style="width:200px;">
+						<div class="card-header bg-black text-white text-center h6">Companies</div>
+						<div class="card-body bg-light text-dark d-flex justify-content-between">
+							<div>
+								<h4 class="card-title">@companyCount</h4>
+								<p class="card-text">Companies</p>
+							</div>
+							<h1><i class="bi bi-building"></i> </h1>
+						</div>
+					</div>
+				</a>
+			
+			</div>
+		</div>
+		<div class="col-md-4 mb-2">
+			<div class="container d-flex justify-content-center mt-1">
+				<a href="/products" class="text-decoration-none">
+					<div class="card text-dark bg-white shadow mb-3 active rounded-2" style="width:200px;">
+						<div class="card-header bg-black text-white text-center h6">Products</div>
+						<div class="card-body bg-light text-dark d-flex justify-content-between">
+							<div>
+								<h4 class="card-title">@productCount</h4>
+								<p class="card-text">Products</p>
+							</div>
+							<h1> <i class="bi bi-bag-fill"></i> </h1>
+						</div>
+					</div>
+				</a>
+			
+			</div>
+			
+		</div>
+	</div>
+</div>
+
+<div class="container mt-5">
+	<div class="container text-center h5 fw-normal">
+		<p>
+			Overview
+		</p>
+	</div>
+	<div class="container mt-1">
+		<div class="row">
+			<div class="col-md-4 mb-3">
+				<div class="container">
+					<div class="card activecard shadow" style="height:155px;">
+						<div class="card-body text-center">
+							<h3>
+								<i class="bi bi-upload h2"></i>
+							</h3>
+							<p>You can upload a file with company info to add a company.</p>
+							<p><em>*File format should be xlsx or csv</em> </p>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 mb-3">
+				<div class="container">
+					<div class="card activecard shadow" style="height:155px;">
+						<div class="card-body text-center">
+							<h3>
+								<i class="bi bi-search h2" ></i> <br />
+							</h3>
+							<p>You can filter products by name to view all exporting and importing companies of that product.</p>
+						
+							
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-md-4 mb-3">
+				<div class="container">
+					<div class="card activecard shadow" style="height:155px;">
+						<div class="card-body text-center">
+							<h3>
+								<i class="bi bi-upload h2"></i>
+							</h3>
+							<p>You can upload a file with company info to add a company.</p>
+							<p><em>File format should be xlsx or csv</em> </p>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+@code {
+
+	private int countryCount;
+	private int companyCount;
+	private int productCount;
+	private bool isDataLoaded = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		using var context = DbFactory.CreateDbContext();
+		countryCount = await context.Country.CountAsync();
+		companyCount = await context.Company.CountAsync();
+		productCount = await context.Product.CountAsync();
+
+		isDataLoaded = true;
+		StateHasChanged();
+	}
+
+}
+
+
+

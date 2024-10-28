@@ -1,0 +1,59 @@
+﻿@page "/companyproducts/delete/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@using ProductServicesApp.Models
+@inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<PageTitle>Delete</PageTitle>
+
+
+<div>
+    <h5>Delete Company Product</h5>
+    <hr />
+    @if (companyproduct is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+   
+        <EditForm method="post" Model="companyproduct" OnValidSubmit="DeleteCompanyProduct" FormName="delete" Enhance>
+            <p class="text-danger">Are you sure you want to delete this?</p>
+            <button type="submit" class="btn btn-sm btn-danger" disabled="@(companyproduct is null)">Delete</button> |
+            <a class="btn btn-sm btn-secondary" @onclick="Cancel" >Cancel</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private CompanyProduct? companyproduct;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        companyproduct = await context.CompanyProduct.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (companyproduct is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteCompanyProduct()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.CompanyProduct.Remove(companyproduct!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/companies");
+    }
+
+    private void Cancel()
+    {
+ 
+        NavigationManager.NavigateTo("/companies");
+    }
+}

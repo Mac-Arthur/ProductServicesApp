@@ -1,0 +1,53 @@
+﻿@page "/companyproducts/details"
+@using Microsoft.EntityFrameworkCore
+@using ProductServicesApp.Models
+@inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>CompanyProduct</h2>
+    <hr />
+    @if (companyproduct is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">ProductId</dt>
+            <dd class="col-sm-10">@companyproduct.ProductId</dd>
+            <dt class="col-sm-2">CompanyId</dt>
+            <dd class="col-sm-10">@companyproduct.CompanyId</dd>
+            <dt class="col-sm-2">IsExporter</dt>
+            <dd class="col-sm-10">@companyproduct.IsExporter</dd>
+            <dt class="col-sm-2">IsImporter</dt>
+            <dd class="col-sm-10">@companyproduct.IsImporter</dd>
+        </dl>
+        <div>
+            <a href="@($"/companyproducts/edit?id={companyproduct.Id}")">Edit</a> |
+            <a href="@($"/companyproducts")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private CompanyProduct? companyproduct;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        companyproduct = await context.CompanyProduct.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (companyproduct is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

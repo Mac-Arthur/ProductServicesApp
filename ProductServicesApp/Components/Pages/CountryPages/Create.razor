@@ -1,16 +1,17 @@
 ﻿@page "/countries/create"
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
 
-<h2>Country</h2>
+
+<h4>Enter Country Details</h4>
 <hr />
-<div class="row">
+<div class="row mt-5">
     <div class="col-md-4">
         <EditForm method="post" Model="Country" OnValidSubmit="AddCountry" FormName="create" Enhance>
             <DataAnnotationsValidator />
@@ -24,44 +25,35 @@
                 <label for="shortcode" class="form-label">ShortCode:</label> 
                 <InputText id="shortcode" @bind-Value="Country.ShortCode" class="form-control" /> 
                 <ValidationMessage For="() => Country.ShortCode" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="isactive" class="form-label">IsActive:</label> 
-                <InputCheckbox id="isactive" @bind-Value="Country.IsActive" class="form-check-input" /> 
-                <ValidationMessage For="() => Country.IsActive" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
+            </div>   
+            <div class="mt-4">
+                <button type="submit" class="btn btn-sm btn-primary">Create</button>
+                <a class="btn btn-sm btn-dark ms-2" href="/countries">Back to List </a>
+            </div>
+            
         </EditForm>
+
     </div>
 </div>
 
 <div>
-    <a href="/countries">Back to List</a>
 </div>
 
 @code {
     [SupplyParameterFromForm]
     private Country Country { get; set; } = new();
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+
     private async Task AddCountry()
     {
         using var context = DbFactory.CreateDbContext();
         context.Country.Add(Country);
         Country.DateCreated = DateTime.Now;
         Country.DateUpdated = DateTime.Now;
+        Country.IsActive = true;
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/countries");
     }
 }
 
-           @*  <div class="mb-3">
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="Country.DateCreated" class="form-control" /> 
-                <ValidationMessage For="() => Country.DateCreated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="dateupdated" class="form-label">DateUpdated:</label> 
-                <InputDate id="dateupdated" @bind-Value="Country.DateUpdated" class="form-control" /> 
-                <ValidationMessage For="() => Country.DateUpdated" class="text-danger" /> 
-            </div>    *@     
+           

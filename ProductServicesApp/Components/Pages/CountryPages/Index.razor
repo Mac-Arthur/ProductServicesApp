@@ -1,70 +1,141 @@
 ﻿@page "/countries"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using ProductServicesApp.Models
 @using ProductServicesApp.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@rendermode InteractiveServer
+@using CsvHelper
+@using CsvHelper.Configuration
+@using System.Globalization
+@using ProductServicesApp.Models.Entities
+@inject IJSRuntime js
+@attribute [Authorize]
+
 
 <PageTitle>Country</PageTitle>
 
-<h4>Manage Countries</h4>
+<div class="container align-items-center">
 
-<p class="mt-3">
-    <a class="btn btn-sm btn-secondary" href="countries/create">Add Country</a>
-</p>
-<div class="table-responsive-md">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Code</th>
-                <th>Date Added</th>
-                <th>Last Updated</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var country in context.Country)
-            {
-                <tr>
-                    <td>@country.Name</td>
-                    <td>@country.ShortCode</td>
-                    <td>@country.DateCreated</td>
-                    <td>@country.DateUpdated</td>
-                    <td>
-                        <a class="btn btn-sm btn-secondary" href="@($"countries/edit?id={country.Id}")">Edit</a> |
-                        <a class="btn btn-sm btn-secondary" href="@($"countries/details?id={country.Id}")">Details</a> |
-                        <a class="btn btn-sm btn-outline-danger" href="@($"countries/delete?id={country.Id}")">Delete</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+	<div class="d-flex flex-column">
+		<h4>Countries</h4>
+		<p> <small>View all 54 African Countries</small> </p>
+	</div>
+	@*
+	<div>
+	<a class="btn btn-dark p-2" href="countries/create" style="border-radius: 0;">
+	<h6>Add Country</h6>
+	</a>
+	<InputFile class="form-control form-control-sm w-75 mt-2" OnChange="FileUpload"></InputFile>
+	</div> *@
 </div>
 
 
-@code {
-    private ApplicationDbContext context = default!;
+<div class="page-size-chooser text-end">
+	Items per page:
+	<select @bind="@pagination.ItemsPerPage" class="p-1">
+		<option>5</option>
+		<option>10</option>
+		<option>20</option>
+		<option>50</option>
+	</select>
+</div>
+	@if (isLoading)
+{
+	<div class="text-center">
 
-    protected override void OnInitialized()
-    {
-        context = DbFactory.CreateDbContext();
-    }
+		<div class="spinner-border text-dark" role="status">
+		</div>
+	</div>
+}
+else
+{
+	<div class="container p-4 shadow my-3 border rounded-4 bg-white mt-4">
+		<div class="table-responsive">
+			<div class="col-md-4">
+				<input class="form-control w-75 border border-dark" type="search" @bind="NameFilter" @bind:event="oninput" autofocus placeholder="Search..." />
+			</div>
+			<Microsoft.AspNetCore.Components.QuickGrid.QuickGrid Class="table my-2 table-hover" Items="FilteredCountry" Pagination="pagination">
+				<PropertyColumn Property="country => country.Name" Sortable="true" />
+				<PropertyColumn Property="country => country.ShortCode" Title="Short Code" Align="Align.Center" />
+				<TemplateColumn Context="country" Title="Details" Align="Align.Center">
+					<a title="details" href="@($"countries/details?id={country.Id}")"><i class="bi bi-info-circle-fill text-black me-1"></i></a>
+				</TemplateColumn>
+			</Microsoft.AspNetCore.Components.QuickGrid.QuickGrid>
+			<Paginator State="pagination">  </Paginator>
+		</div>
+	</div>
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
 
-@* <QuickGrid Class="table" Items="context.Country">
-    <PropertyColumn Property="country => country.Name" />
-    <PropertyColumn Property="country => country.ShortCode" />
-    <PropertyColumn Property="country => country.DateCreated" />
-    <PropertyColumn Property="country => country.DateUpdated" />
-    <PropertyColumn Property="country => country.IsActive" />
 
-    <TemplateColumn Context="country">
-        <a href="@($"countries/edit?id={country.Id}")">Edit</a> |
-        <a href="@($"countries/details?id={country.Id}")">Details</a> |
-        <a href="@($"countries/delete?id={country.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid> *@
+
+
+
+@code {
+	private ApplicationDbContext context = default!;
+	// Country country = new();
+	private bool isLoading = true;
+	string NameFilter = "";
+	IQueryable<Country> FilteredCountry => context.Country.Where(m => m.Name.Contains(NameFilter));
+	PaginationState pagination = new PaginationState();
+
+	protected override async Task OnInitializedAsync()
+	{
+		context = DbFactory.CreateDbContext();
+		await Task.Delay(80);
+		isLoading = false;
+	}
+
+	public async ValueTask DisposeAsync() => await context.DisposeAsync();
+	// private async Task FileUpload(InputFileChangeEventArgs e)
+	// {
+	// 	try
+	// 	{
+	// 		if (e.File is not null)
+	// 		{
+	// 			var file = e.File;
+	// 			var config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
+	// 			using (var reader = new StreamReader(file.OpenReadStream(maxAllowedSize: 2097152)))
+	// 			using (var csv = new CsvReader(reader, config))
+	// 			{
+	// 				var countries = new List<Country>();
+	// 				await foreach (var country in csv.GetRecordsAsync<CountryDTO>())
+	// 				{
+	// 					Country newcountry = new()
+	// 						{
+	// 							Name = country.Name,
+	// 							ShortCode = country.ShortCode,
+	// 							DateCreated = DateTime.Now,
+	// 							DateUpdated = DateTime.Now,
+	// 							IsActive = true,
+	// 						};
+	// 					countries.Add(newcountry);
+	// 				}
+	// 				context.Country.AddRange(countries);
+	// 				await context.SaveChangesAsync();
+	// 				countries = await context.Country.ToListAsync();
+	// 				await LoadCountriesAsync();
+	// 				await js.InvokeVoidAsync("console.log", "Products added successfully");
+	// 				await js.InvokeVoidAsync("alert", "Products added successfully");
+	// 			}
+	// 		}
+	// 	}
+	// 	catch (Exception ex)
+	// 	{
+	// 		await js.InvokeVoidAsync("console.log", $"An error occurred: {ex.Message}");
+	// 		await js.InvokeVoidAsync("alert", $"An error occurred: {ex.Message}");
+	// 	}
+	// }
+	// private async Task LoadCountriesAsync()
+	// {
+
+	// 	IQueryable<Country> FilteredCountry = context.Country.Where(m => m.Name.Contains(NameFilter));
+	// 	await InvokeAsync(StateHasChanged);
+	// }
+	@* <a title="remove" href="@($"countries/delete?id={country.Id}")"><i class="bi bi-trash3-fill text-danger"></i></a> *@
+	@* 		<a title="edit" href="@($"countries/edit?id={country.Id}")"><i class="bi bi-pencil-fill text-dark me-1"></i></a> *@
+}
+

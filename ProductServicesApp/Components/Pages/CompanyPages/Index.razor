@@ -1,76 +1,228 @@
 ﻿@page "/companies"
+@using CsvHelper
+@using CsvHelper.Configuration
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
+@using OfficeOpenXml
 @using ProductServicesApp.Models
+@using ProductServicesApp.Models.Entities
 @using ProductServicesApp.Data
+@using System.Globalization
 @implements IAsyncDisposable
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@inject IJSRuntime js
+@rendermode InteractiveServer
+@attribute [Authorize]
 
 <PageTitle>Company</PageTitle>
 
-<h4>Manage Countries</h4>
+<div class="container d-flex align-items-center justify-content-between">
+	<div class="d-flex flex-column">
+		<h4>Companies</h4>
+		<a class="btn btn-sm btn-outline-dark" href="companies/create">Add Company</a>
+	</div>
+	<div class="d-flex flex-column mt-1">
 
-<p>
-    <a class="btn btn-sm btn-secondary" href="companies/create">Add Company</a>
-</p>
+		<small class="fw-bold">Upload file(.xlsx .csv)</small>
+		<InputFile class="form-control form-control-sm mt-2" OnChange="FileUpload"></InputFile>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Company Mail</th>
-            <th>Contact Name</th>
-            <th>Contact Mail</th>
-            <th>Country</th>
-            <th>Action</th>
+	</div>
 
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var company in context.Company)
-        {
-            <tr>
-                <td>@company.Name</td>
-                <td>@company.CompanyMail</td>
-                <td>@company.ContactPersonName</td>
-                <td>@company.ContactPersonMail</td>
-                <td>@(company.Country?.Name ?? "No Country")</td>
-                <td>
-                    <a class="btn btn-sm btn-secondary" href="@($"companies/edit?id={company.Id}")">Edit</a> |
-                    <a  href="@($"companies/details?id={company.Id}")">Details</a> |
-                    <a class="btn btn-sm btn-outline-danger" href="@($"companies/delete?id={company.Id}")">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+</div>
 
-@code {
-    private ApplicationDbContext context = default!;
+<div class="page-size-chooser p-2 text-end">
+	Items per page:
+	<select @bind="@pagination.ItemsPerPage" class="p-1">
+		<option>5</option>
+		<option>10</option>
+		<option>20</option>
+		<option>50</option>
+	</select>
+</div>
+	@if (isLoading)
+{
+	<div class="text-center">
 
-    protected override void OnInitialized()
-    {
-        context = DbFactory.CreateDbContext();
-        context.Company.Include(c => c.Country).ToList();
-    }
-
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+		<div class="spinner-border text-dark" role="status">
+		</div>
+	</div>
+}
+else
+{
+	<div class="container p-4 shadow my-3 border rounded-4 bg-white">
+		<div class="table-responsive ">
+			<div class="col-md-4">
+				<input class="form-control w-75 border border-dark mb-1" type="search" @bind="NameFilter" @bind:event="oninput" autofocus placeholder="Search..." />
+			</div>
+			<QuickGrid Class="table table-hover" Items="FilteredCompany" Pagination="pagination">
+				<PropertyColumn Property="company => company.Name" />
+				<PropertyColumn Property="company => company.CompanyMail" Title="Mail" />
+				<PropertyColumn Property="company => company.ContactPersonMail" />
+				<TemplateColumn Context="company" Title="Country">
+					@company.Country?.Name
+				</TemplateColumn>
+				<TemplateColumn Context="company" Title="Action" Align="Align.Center">
+					@*  <a href="@($"companies/edit?id={company.Id}")"><i class="bi bi-pencil-fill text-dark me-1"></i> </a> *@
+					<a href="@($"companies/details?id={company.Id}")"> <i class="bi bi-info-circle-fill text-black me-1"></i> </a>
+					<a href="@($"companies/delete?id={company.Id}")"><i class="bi bi-trash3-fill text-danger"></i></a>
+				</TemplateColumn>
+			</QuickGrid>
+			<Paginator State="pagination"> </Paginator>
+		</div>
+	</div>
 }
 
-@* 
-<QuickGrid Class="table" Items="context.Company">
-    <PropertyColumn Property="company => company.Name" />
-    <PropertyColumn Property="company => company.CompanyMail" />
-    <PropertyColumn Property="company => company.ContactPersonName" />
-    <PropertyColumn Property="company => company.ContactPersonMail" />
-    <PropertyColumn Property="company => company.DateCreated" />
-    <PropertyColumn Property="company => company.DateUpdated" />
-    <PropertyColumn Property="company => company.IsActive" />
-    <PropertyColumn Property="company => company.CountryId" />
 
-    <TemplateColumn Context="company">
-        <a href="@($"companies/edit?id={company.Id}")">Edit</a> |
-        <a href="@($"companies/details?id={company.Id}")">Details</a> |
-        <a href="@($"companies/delete?id={company.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid> *@
+
+
+@code {
+	private ApplicationDbContext context = default!;
+	string NameFilter = "";
+	private bool isLoading = true;
+	IQueryable<Company> FilteredCompany => context.Company.Where(m => m.Name.Contains(NameFilter));
+	// IQueryable<CompanyDTO> FilteredCompanyDTO => GetFilteredCompany(NameFilter);
+
+	PaginationState pagination = new PaginationState();
+
+	List<Country> Country = new();
+	protected override async Task OnInitializedAsync()
+	{
+		context = DbFactory.CreateDbContext();
+		await Task.Delay(80);
+		isLoading = false;
+		context.Company.Include(c => c.Country).ToList();
+
+	}
+
+
+	private async Task FileUpload(InputFileChangeEventArgs e)
+	{
+		try
+		{
+			if (e.File is not null)
+			{
+				var file = e.File;
+				var fileExtension = Path.GetExtension(file.Name).ToLower();
+
+				if (fileExtension == ".csv")
+				{
+					var config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
+					using (var reader = new StreamReader(file.OpenReadStream(maxAllowedSize: 2097152)))
+					using (var csv = new CsvReader(reader, config))
+					{
+						var companies = new List<Company>();
+						await foreach (var company in csv.GetRecordsAsync<CompanyDTO>())
+						{
+							var country = await context.Country.FirstOrDefaultAsync(c => c.ShortCode == company.CountryShortCode);
+							if (country != null)
+							{
+								var existingCompany = await context.Company.FirstOrDefaultAsync(c => c.Name == company.Name && c.CountryId == country.Id);
+								if (existingCompany == null)
+								{
+									Company newCompany = new()
+										{
+											Name = company.Name,
+											CompanyMail = company.CompanyMail,
+											ContactPersonMail = company.ContactPersonMail,
+											ContactPersonName = company.ContactPersonName,
+											CountryId = country.Id,
+											DateCreated = DateTime.Now,
+											DateUpdated = DateTime.Now,
+											IsActive = true,
+										};
+									companies.Add(newCompany);
+								}
+							}
+						}
+						if (companies.Count > 0)
+						{
+							context.Company.AddRange(companies);
+							await context.SaveChangesAsync();
+							await LoadCompaniesAsync();
+							await js.InvokeVoidAsync("console.log", "Companies added successfully");
+							await js.InvokeVoidAsync("alert", "Companies added successfully");
+						}
+						else
+						{
+							await js.InvokeVoidAsync("alert", "No new companies to add.");
+						}
+					}
+				}
+				else if (fileExtension == ".xlsx")
+				{
+					ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+					using (var stream = new MemoryStream())
+					{
+						await file.OpenReadStream(maxAllowedSize: 2097152).CopyToAsync(stream);
+						using (var package = new ExcelPackage(stream))
+						{
+							var worksheet = package.Workbook.Worksheets[0]; // Get the first worksheet
+							var rowCount = worksheet.Dimension.Rows;
+							var companies = new List<Company>();
+
+							for (int row = 2; row <= rowCount; row++)
+							{
+								var name = worksheet.Cells[row, 1].Text;
+								var companyMail = worksheet.Cells[row, 2].Text;
+								var contactPersonName = worksheet.Cells[row, 3].Text;
+								var contactPersonMail = worksheet.Cells[row, 4].Text;
+								var countryShortCode = worksheet.Cells[row, 5].Text;
+
+								var country = await context.Country.FirstOrDefaultAsync(c => c.ShortCode == countryShortCode);
+								if (country != null)
+								{
+									var existingCompany = await context.Company.FirstOrDefaultAsync(c => c.Name == name && c.CountryId == country.Id);
+									if (existingCompany == null)
+									{
+										Company company = new()
+											{
+												Name = name,
+												CompanyMail = companyMail,
+												ContactPersonMail = contactPersonMail,
+												ContactPersonName = contactPersonName,
+												CountryId = country.Id,
+												DateCreated = DateTime.Now,
+												DateUpdated = DateTime.Now,
+												IsActive = true,
+											};
+										companies.Add(company);
+									}
+								}
+							}
+
+							if (companies.Count > 0)
+							{
+								context.Company.AddRange(companies);
+								await context.SaveChangesAsync();
+								await LoadCompaniesAsync();
+								await js.InvokeVoidAsync("console.log", "Companies added successfully");
+								await js.InvokeVoidAsync("alert", "Companies added successfully");
+							}
+							else
+							{
+								await js.InvokeVoidAsync("alert", "No new companies to add.");
+							}
+						}
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			await js.InvokeVoidAsync("console.log", $"An error occurred: {ex.Message}");
+			await js.InvokeVoidAsync("alert", $"An error occurred: {ex.Message}");
+		}
+	}
+
+
+	private async Task LoadCompaniesAsync()
+	{
+
+		IQueryable<Company> FilteredCompany = context.Company.Where(m => m.Name.Contains(NameFilter));
+		await InvokeAsync(StateHasChanged);
+	}
+
+	public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
+
+

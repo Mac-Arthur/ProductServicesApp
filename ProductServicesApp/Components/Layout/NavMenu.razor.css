@@ -17,11 +17,12 @@
 
 .top-row {
     height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+/*    background-color: rgba(0,0,0,0.4);*/
 }
 
 .navbar-brand {
     font-size: 1.1rem;
+    color:white;
 }
 
 .bi {
@@ -66,9 +67,28 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-arrow-bar-left' viewBox='0 0 16 16'%3E%3Cpath d='M12.5 15a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5ZM10 8a.5.5 0 0 1-.5.5H3.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L3.707 7.5H9.5a.5.5 0 0 1 .5.5Z'/%3E%3C/svg%3E");
 }
 
+.bi-bag-icon-nav-menu {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-bag' viewBox='0 0 16 16'%3E%3Cpath d='M5.5 0a2 2 0 0 1 2 2v1h1V2a2 2 0 1 1 4 0v1h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1V2a2 2 0 0 1 2-2zm1 2h3v1h-3V2zm-4 3h10v10H2V5zm3 0v1h1V5H5zm3 0v1h1V5H8z'/%3E%3C/svg%3E");
+}
+
+.bi-briefcase-icon-nav-menu {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-briefcase' viewBox='0 0 16 16'%3E%3Cpath d='M4 0a2 2 0 0 0-2 2v1H1a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-1V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v1H3V2a1 1 0 0 1 1-1zm8 11H4a1 1 0 0 1-1-1V5h10v6a1 1 0 0 1-1 1z'/%3E%3C/svg%3E");
+}
+
+
+.bi-globe-icon-nav-menu {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-globe' viewBox='0 0 16 16'%3E%3Cpath d='M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 4.5a6.5 6.5 0 0 1 7 0l-1.5 1.5A5 5 0 0 0 4.5 4.5zM1.5 8a6.5 6.5 0 0 1 2.5-5.5A5.973 5.973 0 0 0 1.5 8zm6.5 6.5a6.5 6.5 0 0 1-7-5.5h6.5v5.5zM8 1.5h4.5a6.5 6.5 0 0 1 1 2.5H8v-2.5zm0 6H2.5a6.5 6.5 0 0 1 1-2.5H8v2.5zM1.5 12a6.5 6.5 0 0 1 7 5.5H8v-5.5z'/%3E%3C/svg%3E");
+}
+
+
+
+
+
+
 .nav-item {
-    font-size: 0.9rem;
+/*    font-size: 0.9rem;*/
     padding-bottom: 0.5rem;
+    color:white;
 }
 
     .nav-item:first-of-type {
@@ -80,7 +100,7 @@
     }
 
     .nav-item ::deep .nav-link {
-        color: #d7d7d7;
+        color: white;
         background: none;
         border: none;
         border-radius: 4px;
@@ -91,8 +111,8 @@
         width: 100%;
     }
 
-.nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.37);
+.nav-item ::deep a.active{
+/*    background-color: rgba(255,255,255,0.37);*/
     color: white;
 }
 

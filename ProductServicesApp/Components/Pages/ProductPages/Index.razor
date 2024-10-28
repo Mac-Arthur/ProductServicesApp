@@ -2,40 +2,98 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using ProductServicesApp.Models
+@using ProductServicesApp.Models.Entities
 @using ProductServicesApp.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@attribute [StreamRendering]
+@attribute [Authorize]
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Products</PageTitle>
 
-<h1>Index</h1>
+<h4>Product Table</h4>
+<hr />
 
-   @* <p>
-       <a href="products/create">Create New</a>
-   </p> *@
 
-<QuickGrid Class="table" Items="context.Product">
-    <PropertyColumn Property="product => product.Name" />
-    <PropertyColumn Property="product => product.IsExporter" />
-    <PropertyColumn Property="product => product.IsImporter" />
-    <PropertyColumn Property="product => product.DateCreated" />
-    <PropertyColumn Property="product => product.DateUpdated" />
-    <PropertyColumn Property="product => product.CompanyId" />
+<div class="container p-4 shadow my-5 border rounded-5 bg-white">
+	<div class="table-responsive">
+		<div class="row">
+			<div class="col-md-4">
+				<input class="form-control w-75 border border-dark" type="search" @bind="NameFilter" @bind:event="oninput" autofocus placeholder="Search..." />
+			</div>
+		</div>
 
-    <TemplateColumn Context="product">
-        <a href="@($"products/edit?id={product.Id}")">Edit</a> |
-        <a href="@($"products/details?id={product.Id}")">Details</a> |
-        <a href="@($"products/delete?id={product.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+		<Microsoft.AspNetCore.Components.QuickGrid.QuickGrid Class="table mt-3 table-hover border" Items="FilteredProductDTO" Pagination="pagination">
+			<TemplateColumn Context="companyproduct" Title="ProductName">
+				@companyproduct.ProductName
+			</TemplateColumn>
+			<TemplateColumn Context="companyproduct" Title="Company" Align="Align.Center">
+				@companyproduct.CompanyName
+			</TemplateColumn>
+			<TemplateColumn Context="companyproduct" Title="Country" Align="Align.Center">
+			 @companyproduct.Country
+			</TemplateColumn>
+			<TemplateColumn Context="companyproduct" Title="Exporter" Align="Align.Center">
+
+				@if (companyproduct.IsExporter)
+				{
+					<span><i class="bi bi-check-lg text-success h4"></i></span>
+				}
+				else
+				{
+					<span><i class="bi bi-x-lg text-danger h4"></i></span>
+				}
+			</TemplateColumn>
+			<TemplateColumn Context="companyproduct" Title="Importer" Align="Align.Center">
+				@if (companyproduct.IsImporter)
+				{
+					<span><i class="bi bi-check-lg text-success h4"></i></span>
+				}
+				else
+				{
+					<span><i class="bi bi-x-lg text-danger h4"></i></span>
+				}
+			</TemplateColumn>
+		</Microsoft.AspNetCore.Components.QuickGrid.QuickGrid>
+
+		<Paginator State="pagination">  </Paginator>
+	</div>
+</div>
+
+
 
 @code {
-    private ApplicationDbContext context = default!;
+	private ApplicationDbContext context = default!;
+	private List<CompanyProduct> products = new List<CompanyProduct>();
+	string NameFilter = "";
 
-    protected override void OnInitialized()
-    {
-        context = DbFactory.CreateDbContext();
-    }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+	IQueryable<GetProductDTO> FilteredProductDTO => GetFilteredProduct(NameFilter);
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+	public IQueryable<GetProductDTO> GetFilteredProduct(string value = "")
+	{
+
+		return context.CompanyProduct.Select(c => new GetProductDTO
+			{
+				ProductName = c.Product!.Name,
+				IsExporter = c.IsExporter,
+				IsImporter = c.IsImporter,
+				CompanyName = c.Company!.Name,
+				Country = c.Company!.Country!.Name,
+				Id = c.Product.Id
+
+			}).Where(c => c.ProductName!.ToLower().Contains(value.ToLower()));
+	}
+
+
+
+
+	protected override async void OnInitialized()
+	{
+		context = DbFactory.CreateDbContext();
+	}
+
+	public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
+

@@ -5,23 +5,32 @@
 <PageTitle>Personal Data</PageTitle>
 
 <StatusMessage />
-<h3>Personal Data</h3>
 
-<div class="row">
-    <div class="col-md-6">
-        <p>Your account contains personal data that you have given us. This page allows you to download or delete that data.</p>
-        <p>
-            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
-        </p>
-        <form action="Account/Manage/DownloadPersonalData" method="post">
-            <AntiforgeryToken />
-            <button class="btn btn-primary" type="submit">Download</button>
-        </form>
-        <p>
-            <a href="Account/Manage/DeletePersonalData" class="btn btn-danger">Delete</a>
-        </p>
+
+<div class="container-fluid ms-2 shadow-lg my-1" style="height:440px;">
+    <p class="text-center display-6">Personal Data</p>
+    <div class="row align-content-center mt-5">
+        <div class="col-md-6">
+            <img class="img-fluid" src="/Images/undraw_profile_details_re_ch9r.svg"/>
+        </div>
+        <div class="col-md-6">
+            <p>Your account contains personal data that you have given us. This page allows you to download or delete that data.</p>
+            <p>
+                <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+            </p>
+            <form action="Account/Manage/DownloadPersonalData" method="post">
+                <AntiforgeryToken />
+                <div class="d-flex">
+                    <button class="btn btn-primary" type="submit">Download</button>
+                    <a href="Account/Manage/DeletePersonalData" class="btn btn-danger ms-3">Delete</a>
+
+                </div>
+            </form>
+
+        </div>
     </div>
 </div>
+
 
 @code {
     [CascadingParameter]

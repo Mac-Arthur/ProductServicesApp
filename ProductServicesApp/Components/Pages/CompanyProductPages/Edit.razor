@@ -1,0 +1,219 @@
+﻿@page "/companyproducts/edit"
+@using Microsoft.EntityFrameworkCore
+@using ProductServicesApp.Models
+@inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+@inject IJSRuntime js
+@attribute [Authorize]
+
+<PageTitle>Edit</PageTitle>
+
+
+
+<h5>Edit CompanyProduct Details</h5>
+<hr />
+@if (dto is null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<div class="row">
+		<div class="col-md-4">
+			<EditForm method="post" Model="dto" OnValidSubmit="UpdateProductAsync" Enhance>
+				<DataAnnotationsValidator />
+				<ValidationSummary />
+				<div class="mb-3">
+					<label for="productname"> Product Name</label>
+					<InputText id="productname" class="form-control" @bind-Value="dto.ProductName"></InputText>
+					<ValidationMessage For="() => dto.ProductName" class="text-danger" />
+				</div>
+				<div class="mb-3">
+					<label for="isexporter" class="form-label">IsExporter :</label>
+					<InputCheckbox id="isexporter" @bind-Value="dto.IsExporter" class="form-check-input" />
+					<ValidationMessage For="() => dto.IsExporter" class="text-danger" />
+				</div>
+				<div class="mb-3">
+					<label for="isexporter" class="form-label">IsImporter :</label>
+					<InputCheckbox id="isexporter" @bind-Value="dto.IsImporter" class="form-check-input" />
+					<ValidationMessage For="() => dto.IsImporter" class="text-danger" />
+				</div>
+				<div>
+					<button type="submit" class="btn btn-sm btn-primary">Save</button>
+					<a class="btn btn-sm btn-dark ms-2" href="/companies">Back to List</a>
+				</div>
+				
+			</EditForm>
+
+		</div>
+	</div>
+}
+
+
+
+@code {
+	[SupplyParameterFromQuery]
+	private int Id { get; set; }
+
+	// [SupplyParameterFromForm]
+	private CompanyProduct? CompanyProduct { get; set; }
+
+
+	[SupplyParameterFromForm]
+	private GetProductDTO? dto { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		using var context = DbFactory.CreateDbContext();
+		// CompanyProduct ??= await context.CompanyProduct.Include(m => m.Product).Include(m => m.Company).FirstOrDefaultAsync(m => m.Id == Id);
+
+
+		dto ??= context.CompanyProduct
+		.Where(m => m.Id == Id)
+		.Select(c => new GetProductDTO
+			{
+				CompanyName = c.Company.Name,
+				Id = c.Id,
+				IsExporter = c.IsExporter,
+				IsImporter = c.IsImporter,
+				ProductName = c.Product.Name
+			})
+		.FirstOrDefault();
+
+
+
+		if (dto is null)
+		{
+			NavigationManager.NavigateTo("notfound");
+		}
+	}
+
+	private async Task UpdateProductAsync()
+	{
+		using var context = DbFactory.CreateDbContext();
+
+		var companyproduct = await context.CompanyProduct.FirstOrDefaultAsync(p => p.Id == Id);
+		if (companyproduct == null)
+		{
+			await js.InvokeVoidAsync("console.log", "CompanyProduct not found.");
+			return;
+		}
+
+		// var productExists = await context.Product.AnyAsync(p => p.Id != companyproduct.ProductId && p.Name.ToLower() == dto.ProductName.ToLower());
+		var productExists = context.Product
+		.Any(p => p.Id != companyproduct.ProductId && p.Name.ToLower() == dto.ProductName.ToLower());
+		if (productExists)
+		{
+			await js.InvokeVoidAsync("console.log", "Product name already exists.");
+			NavigationManager.NavigateTo("/comapanies");
+			return;
+		}
+
+		// Attach and update product
+		var product = await context.Product.FirstOrDefaultAsync(p => p.Id == companyproduct.ProductId);
+		if (product != null)
+		{
+			product.Name = dto.ProductName;
+			context.Attach(product).State = EntityState.Modified;
+		}
+
+		// Attach and update company product
+		companyproduct.IsExporter = dto.IsExporter;
+		companyproduct.IsImporter = dto.IsImporter;
+		context.Attach(companyproduct).State = EntityState.Modified;
+
+		try
+		{
+			await context.SaveChangesAsync();
+		}
+		catch (DbUpdateConcurrencyException)
+		{
+			if (!CompanyProductExists(companyproduct.Id))
+			{
+				NavigationManager.NavigateTo("notfound");
+			}
+			else
+			{
+				throw;
+			}
+		}
+
+		NavigationManager.NavigateTo("/products");
+	}
+
+	private bool CompanyProductExists(int id)
+	{
+		using var context = DbFactory.CreateDbContext();
+		return context.CompanyProduct.Any(e => e.Id == id);
+	}
+
+
+	// private async Task UpdateProductAsync()
+	// {
+	// 	using var context = DbFactory.CreateDbContext();
+
+
+
+	// 	var companyproduct = await context.CompanyProduct.FirstOrDefaultAsync(p => p.Id == Id);
+
+
+	// 	var productExists = context.Product
+	// 	.Any(p => p.Id != companyproduct.ProductId && p.Name.ToLower() == dto.ProductName.ToLower());
+
+	// 	/// IF Product Name Exists then do the below
+	// 	if (productExists)
+	// 	{
+	// 		await js.InvokeVoidAsync("console.log", "Product name already exists.");
+	// 		return;
+			
+	// 	}
+	// 	///
+
+	// 	var product = await context.Product
+	// 	.FirstOrDefaultAsync(p => p.Id == companyproduct.ProductId);
+
+	// 	product.Name = dto.ProductName;
+
+	// 	companyproduct.IsExporter = dto.IsExporter;
+	// 	companyproduct.IsImporter = dto.IsImporter;
+
+	// 	context.CompanyProduct.Update(companyproduct);
+	// 	context.SaveChanges();
+
+	// 	NavigationManager.NavigateTo("/companies");
+	// }
+
+
+	
+	// // private async Task UpdateCompanyProduct()
+	// // {
+	// // 	using var context = DbFactory.CreateDbContext();
+	// // 	context.Attach(CompanyProduct!).State = EntityState.Modified;
+
+	// // 	try
+	// // 	{
+	// // 		await context.SaveChangesAsync();
+	// // 	}
+	// // 	catch (DbUpdateConcurrencyException)
+	// // 	{
+	// // 		if (!CompanyProductExists(CompanyProduct!.Id))
+	// // 		{
+	// // 			NavigationManager.NavigateTo("notfound");
+	// // 		}
+	// // 		else
+	// // 		{
+	// // 			throw;
+	// // 		}
+	// // 	}
+
+	// // 	NavigationManager.NavigateTo("/products");
+	// // }
+
+	// private bool CompanyProductExists(int id)
+	// {
+	// 	using var context = DbFactory.CreateDbContext();
+	// 	return context.CompanyProduct.Any(e => e.Id == id);
+	// }
+}

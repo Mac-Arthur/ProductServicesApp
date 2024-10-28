@@ -1,15 +1,16 @@
 ﻿@page "/products/details"
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Details</PageTitle>
+<PageTitle>Product Details</PageTitle>
 
-<h1>Details</h1>
+
 
 <div>
-    <h2>Product</h2>
+    <h4>Product Details</h4>
     <hr />
     @if (product is null)
     {
@@ -20,33 +21,41 @@
             <dt class="col-sm-2">Name</dt>
             <dd class="col-sm-10">@product.Name</dd>
             <dt class="col-sm-2">IsExporter</dt>
-            <dd class="col-sm-10">@product.IsExporter</dd>
+          @*   <dd class="col-sm-10">@product.IsExporter</dd>
             <dt class="col-sm-2">IsImporter</dt>
             <dd class="col-sm-10">@product.IsImporter</dd>
-            <dt class="col-sm-2">DateCreated</dt>
-            <dd class="col-sm-10">@product.DateCreated</dd>
+            <dt class="col-sm-2">DateCreated</dt> *@
+         @*    <dd class="col-sm-10">@product.DateCreated</dd>
             <dt class="col-sm-2">DateUpdated</dt>
             <dd class="col-sm-10">@product.DateUpdated</dd>
             <dt class="col-sm-2">CompanyId</dt>
             <dd class="col-sm-10">@product.CompanyId</dd>
+            <dt class="col-sm-2">CompanyName</dt>
+            <dd class="col-sm-10">@product.Company?.Name</dd> *@
         </dl>
         <div>
-            <a href="@($"/products/edit?id={product.Id}")">Edit</a> |
-            <a href="@($"/products")">Back to List</a>
+             @* <a class="btn btn-sm btn-secondary" href="@($"/products/edit?id={product.Id}")">Edit</a> | *@
+            <a class="btn btn-sm btn-dark" href="@($"/products")">Back to List</a>
         </div>
     }
 </div>
 
 @code {
     private Product? product;
+    List<Company> Companies = new();
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
 
+
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        product = await context.Product.FirstOrDefaultAsync(m => m.Id == Id);
+        // product = await context.Product.Include(c => c.Company).FirstOrDefaultAsync(m => m.Id == Id);
+
+
+       
 
         if (product is null)
         {

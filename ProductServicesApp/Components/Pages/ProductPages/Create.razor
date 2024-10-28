@@ -1,72 +1,101 @@
 ﻿@page "/products/create/{CompanyId:int}"
-
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
 
-<h2>Product</h2>
+
+<h4>Enter product details</h4>
 <hr />
 <div class="row">
-	<div class="col-md-4">
-		<EditForm method="post" Model="Product" OnValidSubmit="AddProduct" FormName="create" Enhance>
+	<div class="col-md-5">
+		<EditForm method="post" Model="ProductDTO" OnValidSubmit="AddProductAsync" FormName="create" Enhance>
 			<DataAnnotationsValidator />
 			<ValidationSummary class="text-danger" />
 			<div class="mb-3">
 				<label for="name" class="form-label">Name:</label>
-				<InputText id="name" @bind-Value="Product.Name" class="form-control" />
-				<ValidationMessage For="() => Product.Name" class="text-danger" />
+				<InputText id="name" @bind-Value="ProductDTO.Name" class="form-control" />
+				<ValidationMessage For="() => ProductDTO.Name" class="text-danger" />
 			</div>
-			<div class="mb-3">
-				<label for="isexporter" class="form-label">IsExporter:</label>
-				<InputCheckbox id="isexporter" @bind-Value="Product.IsExporter" class="form-check-input" />
-				<ValidationMessage For="() => Product.IsExporter" class="text-danger" />
+			<div class="mb-3 d-flex">
+				<label for="isexporter" class="form-label">IsExporter :</label>
+				<InputCheckbox id="isexporter" @bind-Value="ProductDTO.IsExporter" class="form-check-input ms-1" />
+				<ValidationMessage For="() => ProductDTO.IsExporter" class="text-danger" />
+				<p class="ms-4 text-danger">Toggle on if company exports product</p>
 			</div>
-			<div class="mb-3">
-				<label for="isimporter" class="form-label">IsImporter:</label>
-				<InputCheckbox id="isimporter" @bind-Value="Product.IsImporter" class="form-check-input" />
-				<ValidationMessage For="() => Product.IsImporter" class="text-danger" />
+			<div class="mb-3 d-flex">
+				<label for="isimporter" class="form-label">IsImporter :</label>
+				<InputCheckbox id="isimporter" @bind-Value="ProductDTO.IsImporter" class="form-check-input ms-1" />
+				<ValidationMessage For="() => ProductDTO.IsImporter" class="text-danger" />
+				<p class="ms-4 text-danger">Toggle on if company imports product</p>
+			</div>
+			<div>
+				<button type="submit" class="btn btn-primary">Create</button>
+				<a class="btn btn-dark ms-2" href="@($"companies/details?id={CompanyId}")">Back to List</a>
 			</div>
 
-			<button type="submit" class="btn btn-primary">Create</button>
 		</EditForm>
 	</div>
 </div>
 
-<div>
-	<a href="/products">Back to List</a>
-</div>
 
 @code {
+
 	[SupplyParameterFromForm]
-	private Product Product { get; set; } = new();
+	private ProductDTO ProductDTO { get; set; } = new();
 
 	[Parameter]
 	public int CompanyId { get; set; }
 
 	protected override void OnInitialized()
 	{
-		Console.WriteLine($"CompanyId: {CompanyId}"); 
-		Product.CompanyId = CompanyId;
+
+		using var context = DbFactory.CreateDbContext();
+		// Products = await context.Product.ToListAsync();
+		ProductDTO.CompanyId = CompanyId;
+		Console.WriteLine($"CompanyId: {CompanyId}");
+
 	}
 
-	private async Task AddProduct()
+	private async Task AddProductAsync()
 	{
-		if (Product.CompanyId == 0)
+		using var context = DbFactory.CreateDbContext();
+		var existingProduct = await context.Product
+		.FirstOrDefaultAsync(p => p.Name.ToLower() == ProductDTO.Name.ToLower());
+
+		CompanyProduct companyProduct = new()
+			{
+				CompanyId = CompanyId,
+				IsExporter = ProductDTO.IsExporter,
+				IsImporter = ProductDTO.IsImporter
+			};
+
+		if (existingProduct != null)
 		{
-			throw new InvalidOperationException("CompanyId is not set.");
+			companyProduct.ProductId = existingProduct.Id;
+		}
+		else
+		{
+			Product product = new()
+				{
+					Name = ProductDTO.Name,
+					DateCreated = DateTime.Now,
+					DateUpdated = DateTime.Now,
+					// CompanyProducts = [companyProduct]
+				};
+
+			companyProduct.Product = product;
 		}
 
-		Product.DateCreated = DateTime.Now;
-		Product.DateUpdated = DateTime.Now;
-		using var context = DbFactory.CreateDbContext();
-		context.Product.Add(Product);
-
+		context.CompanyProduct.Add(companyProduct);
 		await context.SaveChangesAsync();
+
 		NavigationManager.NavigateTo("/products");
 	}
 }
+	

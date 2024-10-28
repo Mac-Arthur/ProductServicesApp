@@ -1,14 +1,16 @@
 ﻿@page "/companies/edit"
 @using Microsoft.EntityFrameworkCore
-@using ProductServicesApp.Models
+@using ProductServicesApp.Models;
+@using ProductServicesApp.Models.Entities
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 
-<PageTitle>Edit</PageTitle>
+<PageTitle>Edit Company</PageTitle>
 
-<h1>Edit</h1>
 
-<h2>Company</h2>
+
+<h4>Update Company Details</h4>
 <hr />
 @if (Company is null)
 {
@@ -22,27 +24,27 @@ else
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <input type="hidden" name="Company.Id" value="@Company.Id" />
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="name" class="form-label">Name:</label>
                     <InputText id="name" @bind-Value="Company.Name" class="form-control" />
                     <ValidationMessage For="() => Company.Name" class="text-danger" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="companymail" class="form-label">CompanyMail:</label>
                     <InputText id="companymail" @bind-Value="Company.CompanyMail" class="form-control" />
                     <ValidationMessage For="() => Company.CompanyMail" class="text-danger" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="contactpersonname" class="form-label">ContactPersonName:</label>
                     <InputText id="contactpersonname" @bind-Value="Company.ContactPersonName" class="form-control" />
                     <ValidationMessage For="() => Company.ContactPersonName" class="text-danger" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="contactpersonmail" class="form-label">ContactPersonMail:</label>
                     <InputText id="contactpersonmail" @bind-Value="Company.ContactPersonMail" class="form-control" />
                     <ValidationMessage For="() => Company.ContactPersonMail" class="text-danger" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="datecreated" class="form-label">DateCreated:</label>
                     <InputDate id="datecreated" @bind-Value="Company.DateCreated" class="form-control" disabled />
                     <ValidationMessage For="() => Company.DateCreated" class="text-danger" />
@@ -52,25 +54,33 @@ else
                     <InputDate id="dateupdated" @bind-Value="Company.DateUpdated" class="form-control" disabled />
                     <ValidationMessage For="() => Company.DateUpdated" class="text-danger" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="isactive" class="form-label">IsActive:</label>
                     <InputCheckbox id="isactive" @bind-Value="Company.IsActive" class="form-check-input"  />
                     <ValidationMessage For="() => Company.IsActive" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="countryid" class="form-label">CountryId:</label>
-                    <InputNumber id="countryid" @bind-Value="Company.CountryId" class="form-control" />
+                <div class="mb-2">
+                    <label for="countryid" class="form-label">Country:</label>
+                    <InputSelect id="countryid" @bind-Value="Company.CountryId" class="form-control">
+                        <option value="">Select a country</option>
+                        @foreach (var country in Countries)
+                        {
+                            <option value="@country.Id">@country.Name</option>
+                        }
+                    </InputSelect>
                     <ValidationMessage For="() => Company.CountryId" class="text-danger" />
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
+                <div class="my-3">
+                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    <a class="btn btn-sm btn-dark" href="/companies">Back to List</a>
+                </div>
             </EditForm>
+            
         </div>
     </div>
 }
 
-<div>
-    <a href="/companies">Back to List</a>
-</div>
+
 
 @code {
     [SupplyParameterFromQuery]
@@ -78,11 +88,13 @@ else
 
     [SupplyParameterFromForm]
     private Company? Company { get; set; }
+    private List<Country> Countries = new();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
         Company ??= await context.Company.FirstOrDefaultAsync(m => m.Id == Id);
+        Countries = await context.Country.ToListAsync();
 
         if (Company is null)
         {
@@ -90,7 +102,6 @@ else
         }
     }
 
-   
     private async Task UpdateCompany()
     {
         using var context = DbFactory.CreateDbContext();
@@ -103,14 +114,8 @@ else
             NavigationManager.NavigateTo("notfound");
             return;
         }
-
-        // Preserve the original DateCreated value
         Company.DateCreated = existingCompany.DateCreated;
-
-        // Update the DateUpdated field to the current time
         Company.DateUpdated = DateTime.Now;
-
-        // Attach and mark the entity as modified
         context.Attach(Company!).State = EntityState.Modified;
 
         try
@@ -138,33 +143,15 @@ else
         return context.Company.Any(e => e.Id == id);
     }
 
-    // private async Task UpdateCompany()
-    // {
-    //     using var context = DbFactory.CreateDbContext();
-    //     context.Attach(Company!).State = EntityState.Modified;
-
-    //     try
-    //     {
-    //         await context.SaveChangesAsync();
-    //     }
-    //     catch (DbUpdateConcurrencyException)
-    //     {
-    //         if (!CompanyExists(Company!.Id))
-    //         {
-    //             NavigationManager.NavigateTo("notfound");
-    //         }
-    //         else
-    //         {
-    //             throw;
-    //         }
-    //     }
-
-    //     NavigationManager.NavigateTo("/companies");
-    // }
-
-    // private bool CompanyExists(int id)
-    // {
-    //     using var context = DbFactory.CreateDbContext();
-    //     return context.Company.Any(e => e.Id == id);
-    // }
+  
 }
+
+
+
+
+
+
+
+
+
+
