@@ -6,8 +6,8 @@
 @using ProductServicesApp.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<ProductServicesApp.Data.ApplicationDbContext> DbFactory
-@attribute [StreamRendering]
 @attribute [Authorize]
+@rendermode InteractiveServer
 
 <PageTitle>Products</PageTitle>
 

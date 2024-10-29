@@ -13,6 +13,7 @@
 @inject IJSRuntime js
 @rendermode InteractiveServer
 @attribute [Authorize]
+@inject SweetAlertService Swal;
 
 <PageTitle>Company</PageTitle>
 
@@ -140,11 +141,26 @@ else
 							await context.SaveChangesAsync();
 							await LoadCompaniesAsync();
 							await js.InvokeVoidAsync("console.log", "Companies added successfully");
-							await js.InvokeVoidAsync("alert", "Companies added successfully");
+							var result = await Swal.FireAsync(new SweetAlertOptions
+								{
+									Title = "Success",
+									Text = "Companies added successfully",
+									ShowCancelButton = true,
+
+								});
 						}
 						else
 						{
-							await js.InvokeVoidAsync("alert", "No new companies to add.");
+							// await js.InvokeVoidAsync("alert", "No new companies to add.");
+							var result = await Swal.FireAsync(new SweetAlertOptions
+							{
+								Title = "Error",
+								Text = "No new companies to add",
+								ShowCancelButton = true,
+								Icon = SweetAlertIcon.Error
+
+							});
+							
 						}
 					}
 				}
@@ -196,11 +212,27 @@ else
 								await context.SaveChangesAsync();
 								await LoadCompaniesAsync();
 								await js.InvokeVoidAsync("console.log", "Companies added successfully");
-								await js.InvokeVoidAsync("alert", "Companies added successfully");
+								var result = await Swal.FireAsync(new SweetAlertOptions
+									{
+										Title = "Success",
+										Text = "Companies added successfully",
+										ShowCancelButton = true,
+										Icon = SweetAlertIcon.Success
+
+									});
+								
 							}
 							else
 							{
-								await js.InvokeVoidAsync("alert", "No new companies to add.");
+								// await js.InvokeVoidAsync("alert", "No new companies to add.");
+								var result = await Swal.FireAsync(new SweetAlertOptions
+									{
+										Title = "Error",
+										Text = "No new companies to add",
+										ShowCancelButton = true,
+										Icon = SweetAlertIcon.Error
+
+									});
 							}
 						}
 					}

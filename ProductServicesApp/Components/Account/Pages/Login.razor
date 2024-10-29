@@ -15,7 +15,7 @@
 <div class="container my-3 shadow-lg align-content-center" style="height:500px;">
     <div class="row">
         <div class="col-md-4 offset-lg-2">
-            <img class="img-fluid" src="/Images/undraw_certification_re_ifll.svg" />
+            <img class="img-fluid" src="/Photos/3071357.jpg" />
         </div>
         <div class="col-md-4">
             <section>
@@ -35,12 +35,12 @@
                         <label for="password" class="form-label">Password</label>
                         <ValidationMessage For="() => Input.Password" class="text-danger" />
                     </div>
-                    <div class="mb-4 d-flex justify-content-between">
-                        <label class="form-label">
-                            <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                            Remember me
-                        </label>
-                        <a class="text-decoration-none" href="Account/ForgotPassword">Forgot your password?</a>
+                    <div class="mb-4">
+                      @*    <label class="form-label">
+                             <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+                             Remember me
+                         </label> *@
+                        <a class="text-decoration-none ms-auto" href="Account/ForgotPassword">Forgot your password?</a>
                     </div>
 
                     <div>

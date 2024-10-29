@@ -1,4 +1,5 @@
 ﻿
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -52,6 +53,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddSyncfusionBlazor();
+builder.Services.AddSweetAlert2();
 
 // Add services to the container.
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
